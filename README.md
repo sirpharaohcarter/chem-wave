@@ -1,6 +1,7 @@
 # chem-wave 🌊
 
 Chemistry coming at you in a wave! 🧪🌊
+
 A streamlined tool for accessing, querying, and retrieving chemical data from the PubChem database.
 
 ## Features
