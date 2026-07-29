@@ -1,6 +1,6 @@
 import time
 import requests
-
+from typing import List, Dict, Optional
 
 class ChemWave:
     """
@@ -32,3 +32,27 @@ class ChemWave:
         time.sleep(self.delay) #rate limiter
         
         return response.json()
+
+    def get_compound(self, name: str, properties: Optional[List[str]] = None) -> Dict:
+        """
+        Fetch property details for a compound by its common name.
+        
+        :param name: Common name of the compound (e.g., 'caffeine', 'aspirin')
+        :param properties: List of properties to retrieve (defaults to common set if None)
+        """
+        if properties is None:
+            properties = ["MolecularFormula", "MolecularWeight", "IUPACName"]
+
+        # string of props "MolecularFormula,MolecularWeight,IUPACName"
+        prop_str = ",".join(properties)
+
+        # 2. endpoint url eg. compound/name/caffeine/property/MolecularFormula,MolecularWeight/JSON
+        endpoint = f"compound/name/{name}/property/{prop_str}/JSON"
+
+        data = self._make_request(endpoint)
+
+        # 4. Extract and return the dict
+        try:
+            return data["PropertyTable"]["Properties"][0]
+        except (KeyError, IndexError):
+            return {}

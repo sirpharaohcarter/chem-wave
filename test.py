@@ -2,12 +2,10 @@ from chemwave import ChemWave
 
 wave = ChemWave()
 
-# We test our internal helper manually just to verify it works!
-# Querying PubChem for water's molecular weight in JSON format
-endpoint = "compound/name/water/property/MolecularWeight/JSON"
+print("🌊 Testing get_compound('caffeine')...")
+caffeine_data = wave.get_compound("caffeine")
+print(caffeine_data)
 
-print("🌊 Sending raw request to PubChem...")
-data = wave._make_request(endpoint)
-
-print("Response received from PubChem:")
-print(data)
+print("\n🌊 Testing custom property lookup for 'aspirin'...")
+aspirin_data = wave.get_compound("aspirin", properties=["MolecularFormula", "MolecularWeight"])
+print(aspirin_data)
