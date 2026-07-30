@@ -1,7 +1,5 @@
 from chemwave import ChemWave
 
-from chemwave import ChemWave
-
 wave = ChemWave()
 
 # Test 1: Batch lookup by CIDs

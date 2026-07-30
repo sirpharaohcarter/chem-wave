@@ -29,6 +29,7 @@ print(f"Ethanol CID: {ethanol_cid}")   # 702
 
 # 2. Fetch properties for a single compound (by Name, CID, or SMILES)
 aspirin = wave.get_compound("aspirin")
+# Base properties are: "MolecularFormula", "MolecularWeight", "IUPACName"
 print(f"Aspirin Formula: {aspirin.get('MolecularFormula')}")
 print(f"Aspirin Weight: {aspirin.get('MolecularWeight')}")
 
