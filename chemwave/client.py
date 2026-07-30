@@ -1,6 +1,6 @@
 import time
 import requests
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Union
 
 class ChemWave:
     """
@@ -47,13 +47,21 @@ class ChemWave:
             return None
 
 
-    def get_compound(self, name: str, properties: Optional[List[str]] = None) -> Dict:
+    def get_compound(self, identifier: Union[str, int], namespace: str = "name", properties: Optional[List[str]] = None) -> Dict:
         """
-        Fetch property details for a compound by its common name.
+        Fetch property details for a single compound by Name, CID, or SMILES.
         
-        :param name: Common name of the compound (e.g., 'caffeine', 'aspirin')
-        :param properties: List of properties to retrieve (defaults to common set if None)
+        :param identifier: Name (e.g. 'caffeine'), CID (e.g. 2244), or SMILES string.
+        :param namespace: Lookup domain type: 'name', 'cid', or 'smiles' (Default: 'name')
+        :param properties: List of property names to retrieve.
         """
+        if namespace == "smiles":
+            cid = self.smiles_to_cid(str(identifier))
+            if not cid:
+                return {}
+            identifier = cid
+            namespace = "cid"
+        
         if properties is None:
             properties = ["MolecularFormula", "MolecularWeight", "IUPACName"]
 
@@ -61,7 +69,7 @@ class ChemWave:
         prop_str = ",".join(properties)
 
         # 2. endpoint url eg. compound/name/caffeine/property/MolecularFormula,MolecularWeight/JSON
-        endpoint = f"compound/name/{name}/property/{prop_str}/JSON"
+        endpoint = f"compound/{namespace}/{identifier}/property/{prop_str}/JSON"
 
         data = self._make_request(endpoint)
 
@@ -71,6 +79,57 @@ class ChemWave:
         except (KeyError, IndexError):
             return {}
 
+    def batch_get_compounds(self, identifiers: List[Union[str, int]], namespace: str = "cid", properties: Optional[List[str]] = None) -> List[Dict]:
+        """
+        Fetch properties for multiple compounds at once using their CIDs.
+        
+        :param cids: List of integer PubChem CIDs (e.g. [2244, 702, 962])
+        :param properties: List of property names to retrieve
+        :return: List of property dictionaries for each compound found
+        """
+        if not identifiers:
+            return []
+
+        # convert names / SMILES to cid for ease
+        resolved_cids: List[int] = []
+
+        if namespace == "cid":
+            # confirm cids
+            resolved_cids = [int(i) for i in identifiers]
+        elif namespace == "name":
+            for name in identifiers:
+                cid = self.name_to_cid(str(name))
+                if cid:
+                    resolved_cids.append(cid)
+        elif namespace == "smiles":
+            for smiles in identifiers:
+                cid = self.smiles_to_cid(str(smiles))
+                if cid:
+                    resolved_cids.append(cid)
+
+        # if no valid cids
+        if not resolved_cids:
+            return []
+
+        if properties is None:
+            properties = ["MolecularFormula", "MolecularWeight", "IUPACName"]
+
+        # bulk request
+        cid_str = ",".join(map(str, resolved_cids))
+        prop_str = ",".join(properties)
+        endpoint = f"compound/cid/{cid_str}/property/{prop_str}/JSON"
+
+        data = self._make_request(endpoint)
+
+        if not data:
+            return []
+
+        # 4. Return the list of property dictionaries
+        try:
+            return data["PropertyTable"]["Properties"]
+        except (KeyError, TypeError):
+            return []
+    
     def smiles_to_cid(self, smiles: str) -> Optional[int]:
         """
         Convert a SMILES structure string into a PubChem Compound ID (CID).
@@ -90,5 +149,25 @@ class ChemWave:
         try:
             cids = data["IdentifierList"]["CID"]
             return cids[0]  # Return the CID
+        except (KeyError, IndexError, TypeError):
+            return None
+
+    def name_to_cid(self, name: str) -> Optional[int]:
+        """
+        Convert a compound's common or chemical name into its PubChem CID.
+        
+        :param name: Chemical or common name (e.g. 'caffeine', 'aspirin')
+        :return: Integer CID if found, or None if invalid/not found.
+        """
+        endpoint = f"compound/name/{name}/cids/JSON"
+        
+        data = self._make_request(endpoint)
+        
+        if not data:
+            return None
+            
+        try:
+            cids = data["IdentifierList"]["CID"]
+            return cids[0]
         except (KeyError, IndexError, TypeError):
             return None

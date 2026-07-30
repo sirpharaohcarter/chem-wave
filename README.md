@@ -9,3 +9,32 @@ A streamlined tool for accessing, querying, and retrieving chemical data from th
 * **Quick Retrieval:** Fetch compound properties, IUPAC names, and chemical structures.
 * **ID Mapping:** Easily convert between SMILES and PubChem CIDs.
 * **Batch Operations:** Query multiple compounds simultaneously without hitting rate limits.
+
+## ⚡ Quick Start & Usage
+
+Here is how you can use `ChemWave` to resolve compounds and fetch properties by **Name**, **CID**, or **SMILES**:
+
+```python
+from chemwave import ChemWave
+
+# Initialize the client (default rate-limit delay is 0.25s)
+wave = ChemWave()
+
+# 1. Look up CIDs directly
+caffeine_cid = wave.name_to_cid("caffeine")
+ethanol_cid = wave.smiles_to_cid("CCO")
+
+print(f"Caffeine CID: {caffeine_cid}")  # 2519
+print(f"Ethanol CID: {ethanol_cid}")   # 702
+
+# 2. Fetch properties for a single compound (by Name, CID, or SMILES)
+aspirin = wave.get_compound("aspirin")
+print(f"Aspirin Formula: {aspirin.get('MolecularFormula')}")
+print(f"Aspirin Weight: {aspirin.get('MolecularWeight')}")
+
+# 3. Batch property retrieval (fetch multiple compounds in a single request!)
+names = ["aspirin", "caffeine", "water"]
+batch_data = wave.batch_get_compounds(names, namespace="name")
+
+for compound in batch_data:
+    print(f"• {compound.get('IUPACName')}: {compound.get('MolecularFormula')}")
