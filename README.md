@@ -4,13 +4,21 @@ Chemistry coming at you in a wave! 🧪🌊
 
 A streamlined tool for accessing, querying, and retrieving chemical data from the PubChem database.
 
+### Table of contents:
+
+- [Features](#features)
+- [Tutorial](#tutorial)
+- [Configuration](#configuration)
+  - [Nightly build version](#nightly-build-version)
+  - [Docker](#docker)
+
 ## Features
 
 * **Quick Retrieval:** Fetch compound properties, IUPAC names, and chemical structures.
 * **ID Mapping:** Easily convert between SMILES and PubChem CIDs.
 * **Batch Operations:** Query multiple compounds simultaneously without hitting rate limits.
 
-## Quick Start & Usage ⚡ 
+## Tutorial
 
 Here is how you can use `ChemWave` to resolve compounds and fetch properties by **Name**, **CID**, or **SMILES**:
 
@@ -56,5 +64,12 @@ batch_data = wave.batch_get_compounds(names, namespace="name")
 for compound in batch_data:
     print(f"• {compound.get('IUPACName')}: {compound.get('MolecularFormula')}")
 ```
+---
+## Configuration
 
+`ChemWave` includes default rate-limiting to adhere to PubChem's API policies (max 5 requests per second).
+
+```python
+# Custom rate limit (e.g., 0.5s delay between requests)
+wave = ChemWave(delay=0.5)
 
