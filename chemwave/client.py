@@ -171,3 +171,74 @@ class ChemWave:
             return cids[0]
         except (KeyError, IndexError, TypeError):
             return None
+
+    def get_hazards(self, identifier: Union[str, int], namespace: str = "name") -> Dict:
+        """
+        Fetch GHS safety hazard statements and signal word for a single compound via PUG VIEW.
+        
+        :param identifier: Compound Name, CID, or SMILES
+        :param namespace: Lookup type ('name', 'cid', or 'smiles')
+        :return: Dict containing 'cid', 'signal_word', and a list of 'hazards'
+        """
+        cid = identifier
+        if namespace == "name":
+            cid = self.name_to_cid(str(identifier))
+        elif namespace == "smiles":
+            cid = self.smiles_to_cid(str(identifier))
+
+        if not cid:
+            return {"cid": None, "signal_word": "Unknown", "hazards": []}
+
+        # PUG VIEW
+        url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/{cid}/JSON?heading=GHS+Classification"
+        
+        # Direct PUG VIEW usage requires separate rate limiting
+        time.sleep(self.delay)
+        try:
+            response = self.session.get(url, timeout=10)
+            if response.status_code != 200:
+                return {"cid": cid, "signal_word": "None", "hazards": []}
+            data = response.json()
+        except Exception:
+            return {"cid": cid, "signal_word": "Error", "hazards": []}
+
+        # Parse PUG VIEW JSON structure
+        hazards = []
+        signal_word = "None"
+
+        try:
+            sections = data["Record"]["Section"][0]["Section"][0]["Section"][0]["Information"]
+            for info in sections:
+                info_name = info.get("Name")
+                if info_name == "GHS Hazard Statements":
+                    for item in info.get("Value", {}).get("StringWithMarkup", []):
+                        statement = item.get("String")
+                        if statement and statement not in hazards:
+                            hazards.append(statement)
+                elif info_name == "Signal":
+                    markup = info.get("Value", {}).get("StringWithMarkup", [{}])
+                    signal_word = markup[0].get("String", "None")
+        except (KeyError, IndexError, TypeError):
+            pass
+
+        return {
+            "name": str(identifier),
+            "cid": cid,
+            "signal_word": signal_word,
+            "hazards": hazards
+        }
+
+    def batch_get_hazards(self, identifiers: List[Union[str, int]], namespace: str = "name") -> List[Dict]:
+        """
+        Fetch GHS safety hazards for multiple compounds sequentially.
+        
+        :param identifiers: List of Names, CIDs, or SMILES strings
+        :param namespace: Lookup type ('name', 'cid', or 'smiles')
+        :return: List of hazard dictionaries
+        """
+        results = []
+        for item in identifiers:
+            data = self.get_hazards(item, namespace=namespace)
+            results.append(data)
+        return results
+    

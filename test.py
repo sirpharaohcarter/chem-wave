@@ -1,5 +1,38 @@
 from chemwave import ChemWave
 
+from chemwave import ChemWave
+
+wave = ChemWave()
+
+# Test Single Compound Hazard Query
+print("⚠️ Checking hazards for Methanol...")
+methanol_hazards = wave.get_hazards("methanol", namespace="name")
+print(f"CID: {methanol_hazards['cid']}")
+print(f"Signal Word: {methanol_hazards['signal_word']}")
+print("Hazard Statements:")
+for h in methanol_hazards['hazards']:
+    print(f"  • {h}")
+
+print("\n" + "="*50 + "\n")
+
+# Test Batch Hazard Query
+print("⚠️ Batch checking hazards for multiple compounds...")
+chemicals = ["ethanol", "acetone", "water"]
+batch_hazards = wave.batch_get_hazards(chemicals, namespace="name")
+
+for item in batch_hazards:
+    print(f"Name: {item['name']} | CID {item['cid']} | Signal: {item['signal_word']}")
+    if item['hazards']:
+        for h in item['hazards']:
+            print(f"  • {h}")
+    else:
+        print("  • No hazard classification found.")
+
+
+#previous tests (just for record, some may be faulty)
+
+'''
+
 wave = ChemWave()
 
 # Test 1: Batch lookup by CIDs
@@ -22,10 +55,6 @@ smiles_results = wave.batch_get_compounds(smiles_list, namespace="smiles")
 for item in smiles_results:
     print(f"• CID {item.get('CID')}: Weight={item.get('MolecularWeight')}")
 
-
-#previous tests (just for record, some may be faulty)
-
-'''
 
 wave = ChemWave()
 
