@@ -8,15 +8,16 @@ A streamlined tool for accessing, querying, and retrieving chemical data from th
 
 - [Features](#features)
 - [Tutorial](#tutorial)
+    - [Hazard Data](#hazard-data)
 - [Supported Properties](#supported-properties)
 - [Configuration](#configuration)
   
 ## Features
 
 * **Quick Retrieval:** Fetch formulas, weights, and IUPAC names without fighting raw API responses.
-* **Effortless ID Mapping:** Jump between common names, SMILES strings, and PubChem CIDs seamlessly.
-* **Smart Batching:** Request properties for whole lists of compounds at once without getting rate-limited.
-* **Friendly Error Handling:** Invalid inputs won't crash your script—ChemWave handles bad queries gracefully.
+* **ID Mapping:** Jump between common names, SMILES strings, and PubChem CIDs seamlessly.
+* **Batching:** Request properties for whole lists of compounds at once without getting rate-limited.
+* **Lab Safety Lookups:** Retrieve GHS signal words and hazard statements directly from PubChem PUG VIEW.
 
 ## Tutorial
 
@@ -64,6 +65,35 @@ batch_data = wave.batch_get_compounds(names, namespace="name")
 for compound in batch_data:
     print(f"• {compound.get('IUPACName')}: {compound.get('MolecularFormula')}")
 ```
+
+### Hazard Data
+
+ChemWave connects directly to PubChem's PUG VIEW service to fetch GHS hazard classification statements and signal words.
+
+
+#### Single Compound Safety Lookup
+```python
+methanol_hazards = wave.get_hazards("methanol", namespace="name")
+
+print(f"Chemical: {methanol_hazards['name'].capitalize()}")
+print(f"CID: {methanol_hazards['cid']}")
+print(f"Signal Word: {methanol_hazards['signal_word']}")
+print("Hazards:")
+for hazard in methanol_hazards['hazards']:
+    print(f"  • {hazard}")
+```
+
+#### Batch Safety Lookup
+```python
+chemicals = ["ethanol", "acetone", "water"]
+batch_hazards = wave.batch_get_hazards(chemicals, namespace="name")
+
+for item in batch_hazards:
+    print(f"🧪 {item['name'].capitalize()} (CID {item['cid']}) | Signal: {item['signal_word']}")
+    for h in item['hazards']:
+        print(f"   • {h}")
+```
+
 
 ## Supported Properties
 
