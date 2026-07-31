@@ -9,9 +9,7 @@ A streamlined tool for accessing, querying, and retrieving chemical data from th
 - [Features](#features)
 - [Tutorial](#tutorial)
 - [Configuration](#configuration)
-  - [Nightly build version](#nightly-build-version)
-  - [Docker](#docker)
-
+  
 ## Features
 
 * **Quick Retrieval:** Fetch compound properties, IUPAC names, and chemical structures.
